@@ -163,4 +163,8 @@ cython_debug/
 
 
 # Binary files
+database.dat
 .dat
+
+# Test script
+test.py
