@@ -156,14 +156,14 @@ class Reservation(Model):
 
 
 def load_tables(file_name) -> dict:
-  with open(file_name, 'rb') as file:
-    tables = load(file)
-  return tables
+    with open(file_name, 'rb') as file:
+        tables = load(file)
+    return tables
 
 
 def save_tables(file_name, tables) -> None:
-  with open(file_name, 'wb') as file:
-    dump(tables, file)
+    with open(file_name, 'wb') as file:
+        dump(tables, file)
 
 
 def get_database_path() -> str:
