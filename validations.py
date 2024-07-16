@@ -9,6 +9,13 @@ from utils import translate_column_name
 
 class Request(ABC):
     def validate(self, data: dict, mode: str) -> list:
+        """
+        Valid a dict based in the validation rules of mode. Returns a list contains errors if validation failed.
+        
+        :param dict data:
+        :param str mode:
+        :return errors list:
+        """
         validation = self.create_validation() if mode == 'create' else self.update_validation()
         errors = []
         for field, rules in validation.items():
@@ -39,6 +46,12 @@ class Request(ABC):
 
     @staticmethod
     def cast_data_type(type: str, data):
+        """
+        Converts a input into the correct type
+        
+        :param str type:
+        :param data:
+        """
         match type.lower():
             case 'int':
                 return int(data)
@@ -51,6 +64,12 @@ class Request(ABC):
 
 
     def get_errors_message(self, field: str) -> dict:
+        """
+        Returns a dict with all error messages
+        
+        :param str field:
+        :return dict:
+        """
         pprint(field)
         field = translate_column_name(field)
         return {
@@ -68,18 +87,43 @@ class Request(ABC):
 
 
     def is_phone(self, value) -> bool:
+        """
+        Verify if the value is a phone number valid
+        
+        :author: ChatGPT
+        :return bool:
+        """
         return isinstance(value, str) and len(value) == 9 and value.isdigit()
 
     
     def is_integer(self, value) -> bool:
+        """
+        Verify if the value is a integer
+        
+        :param value:
+        :return bool:
+        """
         return isinstance(value, int)
 
     
     def is_str(self, value) -> bool:
+        """
+        Verify if the value is a string
+        
+        :param value:
+        :return bool:
+        """
         return isinstance(value, str)
 
     
     def is_date(self, value) -> bool:
+        """
+        Verify if the value is a valid date
+        
+        :author: ChatGPT
+        :param value:
+        :return bool:
+        """
         if not isinstance(value, str) or len(value) != 10:
             return False
         try:
@@ -90,22 +134,54 @@ class Request(ABC):
 
     
     def is_float(self, value) -> bool:
+        """
+        Verify if the value is a float
+        
+        :param value:
+        :return bool:
+        """
         return isinstance(value, float)
 
     
     def is_positive(self, value) -> bool:
+        """
+        Verify if the value is a number greater than zero
+        
+        :param value:
+        :return bool:
+        """
         return isinstance(value, (int, float)) and value > 0
 
     
     def is_required(self, value) -> bool:
+        """
+        Verify if the value not is none or a empty string
+
+        :param value:        
+        :return bool:
+        """
         return value is not None and value != ''
     
     
     def is_email(self, value) -> bool:
+        """
+        Verify if the value is a valid email
+        
+        :author: ChatGPT
+        :return bool:
+        """
         return match(r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$', value)
     
 
     def exists_in(self, table: str, value: int) -> bool:
+        """
+        Verify if the value exists in the table like a foreign key
+        
+        :author: ChatGPT
+        :param str table:
+        :param int value:
+        :return bool:
+        """
         tables = get_connection()
         if table not in tables:
             return False

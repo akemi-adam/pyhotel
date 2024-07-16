@@ -1,12 +1,12 @@
 from pprint import pprint
-from typing import Type
+from typing import Type, List
 
 from tabulate import tabulate
 
-from models import Model
+from models import Model, Room
 from controllers import Controller
 from validations import Request
-from utils import translate_column_name
+from utils import translate_column_name, number_format
 
 
 
@@ -17,21 +17,21 @@ class CliInterface:
         self.controller = controller
         self.request = request
 
-    def show_message(self, message: str, waitForNextAction: bool = False) -> None:
+    def show_message(self, message: str, wait_for_next_action: bool = False) -> None:
         print(message)
-        if waitForNextAction:
+        if wait_for_next_action:
             input("Aperte <Enter> para prosseguir")
 
     
-    def show_table(self, table) -> None:
-        self.show_message(tabulate(table, headers='firstrow', tablefmt='rounded_grid'), True)
+    def show_table(self, table, wait_for_next_action = True) -> None:
+        self.show_message(tabulate(table, headers='firstrow', tablefmt='rounded_grid'), wait_for_next_action)
 
 
     def read_line(self, message: str) -> str:
         return input(message)
     
 
-    def show_options(self) -> None:
+    def show_crud_options(self) -> None:
         print(f'''
         ###########################
                 {self.module.capitalize()}
@@ -42,9 +42,21 @@ class CliInterface:
         3 - Editar {self.module}
         4 - Deletar {self.module}
         ''')
+        
+        
+    def show_reports_options(self) -> None:
+        print(f'''
+        ###########################
+                Relatórios
+        ###########################
+                
+        1 - Relatório de receitas
+        2 - Relatório de quartos ocupados
+        3 - Relatório de quartos desocupados
+        ''')
 
     
-    def choose_crud_option(self) -> None:
+    def choose_crud_options(self) -> None:
         match int(self.read_line('Escolha a operação: ')):
             case 1:
                 self.create_option()
@@ -58,16 +70,14 @@ class CliInterface:
                 self.show_message('Opção inválida!', True)
                 
     
-    def choose_report_option(self) -> None:
+    def choose_report_options(self) -> None:
         match int(self.read_line('Escolha a operação: ')):
             case 1:
-                pass
+                self.balance_option()
             case 2:
-                pass
+                self.rooms_currently_reserved_option()
             case 3:
-                pass
-            case 4:
-                pass
+                self.rooms_currently_free_option()
             case _:
                 self.show_message('Opção inválida!', True)
 
@@ -137,6 +147,37 @@ class CliInterface:
             self.show_message(f'{self.module} deletado com sucesso!', True)
         except Exception as e:
             self.show_message(f'Um erro ocorreu: {e}', True)
+        
+        
+    def balance_option(self):
+        self.show_message('Receitas geradas pelas reservas')
+        table: list = [['ID', 'Receita']]
+        data: dict = self.controller.get_total_balance()
+        for reservation in data['reservations']:
+            table.append([reservation.id, f'R$ {number_format(reservation.get_balance())}'])
+        self.show_table(table, False)
+        self.show_message(f'Receita total: R$ {number_format(data['total_balance'])}', True)
+    
+    
+    def _show_rooms(self, message: str, rooms: List[Room]):
+        self.show_message(message)
+        table: list = [[translate_column_name(column[0]) for column in Room.columns]]
+        table[0].insert(0, 'ID')
+        rooms: List[Room] = rooms
+        for id, room in enumerate(rooms):
+            row: list = [id]
+            for column in room.columns:
+                row.append(getattr(room, column[0]))
+            table.append(row)
+        self.show_table(table)
+    
+    
+    def rooms_currently_reserved_option(self):
+        self._show_rooms('Quartos reservados no momento', self.controller.get_rooms_currently_reserved())
+    
+    
+    def rooms_currently_free_option(self):
+        self._show_rooms('Quartos livres no momento', self.controller.get_rooms_currently_free())
         
 
 class GuiInterface:

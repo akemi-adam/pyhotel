@@ -1,9 +1,9 @@
 from platform import system as get_os
 from os import system
 
-from models import Client, Room, Reservation
-from controllers import ClientController, RoomController, ReservationController
-from validations import ClientRequest, RoomRequest, ReservationRequest
+from models import Client, Room, Reservation, Model
+from controllers import ClientController, RoomController, ReservationController, ReportController
+from validations import ClientRequest, RoomRequest, ReservationRequest, Request
 from interfaces import CliInterface
 
 
@@ -36,18 +36,20 @@ if __name__ == '__main__':
             match option:
                 case 1:
                     menu: CliInterface = CliInterface('clientes', Client, ClientController(Client), ClientRequest())
-                    menu.show_options()
-                    menu.choose_crud_option()
+                    menu.show_crud_options()
+                    menu.choose_crud_options()
                 case 2:
                     menu: CliInterface = CliInterface('quartos', Room, RoomController(Room), RoomRequest())
-                    menu.show_options()
-                    menu.choose_crud_option()
+                    menu.show_crud_options()
+                    menu.choose_crud_options()
                 case 3:
                     menu: CliInterface = CliInterface('reservas', Reservation, ReservationController(Reservation), ReservationRequest())
-                    menu.show_options()
-                    menu.choose_crud_option()
+                    menu.show_crud_options()
+                    menu.choose_crud_options()
                 case 4:
-                    pass
+                    menu: CliInterface = CliInterface('reservas', Model, ReportController(), Request)
+                    menu.show_reports_options()
+                    menu.choose_report_options()
                 case 5:
                     pass
                 case 6:

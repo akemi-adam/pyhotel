@@ -5,7 +5,7 @@ from typing import Type
 from pickle import dump, load
 from tabulate import tabulate
 
-from utils import translate_column_name, date_is_in_range, cast_date, remove_last_char
+from utils import count_days_from_interval, cast_date, date_is_in_range, today, translate_column_name
 from exceptions import ModelNotFoundedException
 
 class Model:
@@ -27,7 +27,7 @@ class Model:
         return model
     
 
-    def cast_model_to_dict(self):
+    def cast_model_to_dict(self) -> dict:
         model_dict: dict = {'deleted': False}
         for column in self.columns:
             model_dict[column[0]] = getattr(self, column[0])
@@ -51,7 +51,7 @@ class Model:
             models.append(cls.cast_dict_to_model(id, row))
         return models
 
-    # 11 e 4
+
     @classmethod
     def find(cls, id: int):
         database = get_connection()
@@ -59,6 +59,7 @@ class Model:
             if index == id and not row['deleted']:
                 return cls.cast_dict_to_model(id, row)
         raise ModelNotFoundedException(id)
+
 
     def update(self, data: dict):
         for column, value in data.items():
@@ -69,7 +70,7 @@ class Model:
         return self
 
     
-    def delete(self):
+    def delete(self) -> bool:
         database: dict = get_connection()
         database[self.table_name][self.id]['deleted'] = True
         save_tables(get_database_path(), database)
@@ -97,7 +98,7 @@ class Client(Model):
     ]
     
     
-    def reservations(self):
+    def reservations(self) -> list:
         return [reservation for reservation in Reservation.find_all() if reservation.client_id == self.id]
 
 
@@ -123,7 +124,7 @@ class Room(Model):
         return False
     
     
-    def reservations(self):
+    def reservations(self) -> list:
         return [reservation for reservation in Reservation.find_all() if reservation.room_id == self.id]
 
 
@@ -136,10 +137,20 @@ class Reservation(Model):
         ("check_out_date", "date"),
     ]
     
-    def client(self):
-        return Client.find(self.client_id)
+    @classmethod
+    def get_paids(cls) -> list:
+        return [reservation for reservation in cls.find_all() if cast_date(reservation.check_out_date) < today()]
     
-    def room(self):
+    
+    def get_balance(self) -> float:
+        return self.room().diary_price * count_days_from_interval(self.check_in_date, self.check_out_date)
+    
+    
+    def client(self) -> Client:
+        return Client.find(self.client_id)
+
+    
+    def room(self) -> Room:
         return Room.find(self.room_id)
     
 
